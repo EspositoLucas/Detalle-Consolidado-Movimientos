@@ -72,7 +72,7 @@
                     <div class="input-row flex flex-col md:flex-row gap-4 mb-3 items-start">
                         <div class="flex-grow">
                             <label class="input-label">Concepto</label>
-                            <input type="text" value="Gastos hasta el día" class="input-field concept-input bg-gray-100" readonly>
+                            <input type="text" id="gastos-concepto" value="Gastos hasta el día" class="input-field concept-input bg-gray-100">
                         </div>
                         <div class="w-full md:w-1/3">
                             <label class="input-label">Importe</label>
@@ -91,8 +91,8 @@
             </div>
             <!-- Aportes a Gastos -->
             <div class="section-card" id="aportes-section">
-                <h2 class="section-title">Aportes a Gastos</h2>
-                <p class="text-sm text-gray-600 mb-3">Registra aquí si diferentes personas contribuyeron a cubrir los gastos totales.</p>
+                <h2 class="section-title">Aportes a Compras y Gastos</h2>
+                <p class="text-sm text-gray-600 mb-3">Registra aquí los aportes realizados para cubrir el total de Compras y Gastos.</p>
                 <div id="aportes-list"></div>
                 <button onclick="addRow('aportes')" class="button button-success add-button"><i class="fas fa-plus mr-1"></i> Añadir Aporte</button>
                 <div class="total-row">Total Aportes: <span id="total-aportes" class="currency">0.00</span></div>

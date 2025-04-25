@@ -46,10 +46,14 @@ function updateDateHeaders() {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
     const fechaFormateada = fecha.toLocaleDateString('es-AR', options); // Formato AR
 
-    // Actualizar el placeholder del concepto de gasto
-    const gastoConceptoInput = document.querySelector('#gastos-list .concept-input');
+    // Actualizar el concepto de gasto si está vacío o tiene el valor por defecto
+    const gastoConceptoInput = document.getElementById('gastos-concepto');
     if (gastoConceptoInput) {
-        gastoConceptoInput.value = `Gastos hasta el ${fechaFormateada}`;
+        const defaultValue = `Gastos hasta el ${fechaFormateada}`;
+        // Solo actualizar si está vacío o si aún contiene el valor por defecto anterior (o uno similar)
+        if (!gastoConceptoInput.value || gastoConceptoInput.value.startsWith('Gastos hasta el ')) {
+            gastoConceptoInput.value = defaultValue;
+        }
     }
 
     // Actualizar ID por defecto si el campo está vacío o es un detalle nuevo no cargado/guardado
@@ -185,58 +189,75 @@ function calculateTotals() {
 
 // --- Cálculo de Rentabilidad y Análisis de Aportes ---
 function calculateProfitability(ventas, compras, gastos, aportes, aportesDetallados) {
-    const rentabilidad = ventas - (compras + gastos);
+    const montoTotalACubrir = compras + gastos;
+    const rentabilidadBruta = ventas - montoTotalACubrir; // Ganancia antes de distribuir
+
     const rentabilidadElement = document.getElementById('rentabilidad-total');
     const rentabilidadDistribuidaElement = document.getElementById('rentabilidad-distribuida');
 
-    // Mostrar rentabilidad y aplicar estilo (positivo/negativo)
-    rentabilidadElement.innerHTML = `<span class="currency">${formatCurrency(rentabilidad)}</span>`;
-    rentabilidadElement.classList.toggle('profit-positive', rentabilidad >= 0);
-    rentabilidadElement.classList.toggle('profit-negative', rentabilidad < 0);
+    // Mostrar rentabilidad BRUTA y aplicar estilo
+    rentabilidadElement.innerHTML = `<span class="currency">${formatCurrency(rentabilidadBruta)}</span>`;
+    rentabilidadElement.classList.toggle('profit-positive', rentabilidadBruta >= 0);
+    rentabilidadElement.classList.toggle('profit-negative', rentabilidadBruta < 0);
+    // La fórmula visible en HTML ya refleja este cálculo (Ventas - (Compras + Gastos))
 
-    // Limpiar análisis de aportes anterior
+    // Limpiar análisis anterior
     rentabilidadDistribuidaElement.innerHTML = '';
 
-    // Mostrar análisis si hay aportes y detalles válidos
-    if (aportes > 0 && aportesDetallados.length > 0) {
-         let distribucionHtml = '<h4 class="font-semibold mt-2 text-blue-800">Análisis de Aportes a Gastos:</h4><ul class="list-none pl-0">'; // Usar list-none para controlar estilo
-         let gastosCubiertosPorAportes = Math.min(gastos, aportes); // Cuánto de los gastos se cubre
+    // --- Análisis de Aportes sobre Compras + Gastos ---
+    if (aportesDetallados.length > 0 && montoTotalACubrir > 0) {
+         let analisisHtml = '<h4 class="font-semibold mt-2 text-blue-800">Análisis de Aportes sobre Compras + Gastos:</h4><ul class="list-none pl-0">';
+         analisisHtml += `<li class="text-gray-700 text-sm">- Total a Cubrir (Compras + Gastos): <span class="currency font-medium">${formatCurrency(montoTotalACubrir)}</span></li>`;
+         analisisHtml += `<li class="text-gray-700 text-sm">- Total Aportes Recibidos: <span class="currency font-medium">${formatCurrency(aportes)}</span></li>`;
 
-         distribucionHtml += `<li class="text-gray-700 text-sm">- Total Aportes: <span class="currency font-medium">${formatCurrency(aportes)}</span></li>`;
-         distribucionHtml += `<li class="text-gray-700 text-sm">- Gastos cubiertos por aportes: <span class="currency font-medium">${formatCurrency(gastosCubiertosPorAportes)}</span></li>`;
-
-         // Calcular y mostrar diferencias si hay más de un aportante y gastos cubiertos
-         if (aportesDetallados.length > 1 && gastosCubiertosPorAportes > 0) {
-             const aporteEquitativo = gastosCubiertosPorAportes / aportesDetallados.length; // Cuánto debería poner cada uno para cubrir gastos
-             distribucionHtml += `<li class="text-gray-700 text-sm">- Aporte equitativo p/persona (s/gastos cubiertos): <span class="currency font-medium">${formatCurrency(aporteEquitativo)}</span></li>`;
-             distribucionHtml += '<ul class="list-disc list-inside ml-4 mt-1 text-sm">'; // Sublista para detalles
+         if (aportesDetallados.length > 0) {
+             const aporteRequeridoEquitativo = montoTotalACubrir / aportesDetallados.length;
+             analisisHtml += `<li class="text-gray-700 text-sm">- Aporte Equitativo Requerido p/persona: <span class="currency font-medium">${formatCurrency(aporteRequeridoEquitativo)}</span></li>`;
+             analisisHtml += '<ul class="list-disc list-inside ml-4 mt-1 text-sm">'; // Sublista para detalles
              aportesDetallados.forEach(aporte => {
-                 const diferencia = aporte.monto - aporteEquitativo;
+                 const diferencia = aporte.monto - aporteRequeridoEquitativo;
                  let diffClass = diferencia === 0 ? 'text-gray-600' : (diferencia > 0 ? 'text-green-600' : 'text-red-600');
                  let diffText = '';
                  if (diferencia !== 0) {
-                     diffText = diferencia > 0 ? `(aportó ${formatCurrency(diferencia)} más)` : `(aportó ${formatCurrency(Math.abs(diferencia))} menos)`;
+                     diffText = diferencia > 0 ? `(aportó ${formatCurrency(diferencia)} más de lo requerido)` : `(aportó ${formatCurrency(Math.abs(diferencia))} menos de lo requerido)`;
                  } else {
-                     diffText = '(Equitativo)';
+                     diffText = '(Equitativo a lo requerido)';
                  }
-                 distribucionHtml += `<li class="${diffClass}">${aporte.persona}: <span class="currency">${formatCurrency(aporte.monto)}</span> ${diffText}</li>`;
+                 analisisHtml += `<li class="${diffClass}">${aporte.persona}: <span class="currency">${formatCurrency(aporte.monto)}</span> ${diffText}</li>`;
              });
-             distribucionHtml += '</ul>';
-             distribucionHtml += `<li class="text-xs text-gray-500 mt-2">Nota: Las diferencias podrían requerir compensación según acuerdos.</li>`;
-
-         } else if (aportesDetallados.length === 1) {
-             // Caso de un solo aportante
-              distribucionHtml += `<li class="text-gray-700 text-sm">- Aporte realizado únicamente por: ${aportesDetallados[0].persona}.</li>`;
+             analisisHtml += '</ul>';
          }
-
-         distribucionHtml += '</ul>';
-         rentabilidadDistribuidaElement.innerHTML = distribucionHtml;
-
-    } else if (aportesDetallados.length > 0 && aportes <= 0) {
-         // Caso donde hay nombres pero el total es 0 o negativo
-         rentabilidadDistribuidaElement.innerHTML = '<p class="text-orange-600 text-xs">Se han añadido aportantes pero el total de aportes es cero o negativo.</p>';
+         analisisHtml += '</ul>';
+         rentabilidadDistribuidaElement.innerHTML += analisisHtml; // Añadir sección de análisis
+    } else if (aportesDetallados.length > 0 && montoTotalACubrir <= 0) {
+         rentabilidadDistribuidaElement.innerHTML += '<p class="text-orange-600 text-xs mt-2">No hay compras ni gastos a cubrir, pero se registraron aportantes.</p>';
     }
-    // Si no hay aportes > 0, no se muestra nada.
+
+    // --- Distribución Equitativa de Rentabilidad Neta ---
+    if (rentabilidadBruta !== 0 && aportesDetallados.length > 0) {
+         let distribucionHtml = `<h4 class="font-semibold mt-3 text-blue-800">Distribución Equitativa de Rentabilidad Neta:</h4>`;
+         distribucionHtml += `<p class="text-sm text-gray-700 mb-1">Rentabilidad Bruta Total: <span class="currency font-medium">${formatCurrency(rentabilidadBruta)}</span></p>`;
+
+         // Calculamos la parte equitativa de la ganancia para cada persona
+         const rentabilidadNetaPorPersona = rentabilidadBruta / aportesDetallados.length;
+         distribucionHtml += `<p class="text-sm text-gray-700 mb-2">Parte Equitativa por Persona: <span class="currency font-medium">${formatCurrency(rentabilidadNetaPorPersona)}</span></p>`;
+
+         distribucionHtml += '<ul class="list-disc list-inside ml-4 text-sm">'; // Usamos lista para claridad
+         aportesDetallados.forEach(aporte => {
+             // Mostramos la misma cantidad (la parte equitativa) para cada persona
+             distribucionHtml += `<li class="text-gray-700">
+                 ${aporte.persona}: <span class="currency font-medium">${formatCurrency(rentabilidadNetaPorPersona)}</span>
+             </li>`;
+         });
+         distribucionHtml += '</ul>';
+         distribucionHtml += `<p class="text-xs text-gray-500 mt-2">Nota: Cada participante recibe una parte igual de la rentabilidad bruta total. Este reparto compensa las diferencias en los aportes iniciales.</p>`;
+         rentabilidadDistribuidaElement.innerHTML += distribucionHtml; // Añadir sección de distribución
+    } else if (rentabilidadBruta === 0 && aportesDetallados.length > 0) {
+         rentabilidadDistribuidaElement.innerHTML += '<p class="text-gray-700 text-sm mt-3">La rentabilidad bruta es cero. No hay ganancias/pérdidas para distribuir.</p>';
+    }
+
+    // Mensaje si hay aportantes pero el total de aportes es cero o negativo (ya cubierto arriba si montoTotalACubrir > 0)
+    // if (aportesDetallados.length > 0 && aportes <= 0 && montoTotalACubrir > 0) { ... } // Se mantiene comentario anterior
 }
 
 // --- Funciones CRUD (Create, Read, Update, Delete) para localStorage ---
@@ -276,9 +297,11 @@ function createNewDetalle(showMessage = true) {
     const listIds = ['compras-list', 'ventas-list', 'cobranzas-list', 'articulos-list', 'aportes-list'];
     listIds.forEach(id => document.getElementById(id).innerHTML = '');
 
-    // Limpiar el input de gastos (que es fijo)
-    const gastoInput = document.querySelector('#gastos-list .amount-input');
-    if (gastoInput) gastoInput.value = ''; // Limpiar valor
+    // Limpiar inputs de gastos (concepto e importe)
+    const gastoConceptoInput = document.getElementById('gastos-concepto');
+    const gastoAmountInput = document.querySelector('#gastos-list .amount-input');
+    if (gastoConceptoInput) gastoConceptoInput.value = ''; // Limpiar concepto
+    if (gastoAmountInput) gastoAmountInput.value = ''; // Limpiar valor
 
     // Añadir una fila vacía inicial a cada sección (excepto gastos)
     addRow('compras');
@@ -287,7 +310,7 @@ function createNewDetalle(showMessage = true) {
     addRow('articulos');
     addRow('aportes');
 
-    updateDateHeaders(); // Actualizar concepto de gasto y potencialmente ID por defecto
+    updateDateHeaders(); // Actualizar concepto de gasto por defecto y potencialmente ID
     calculateTotals(); // Recalcular totales (deberían ser 0)
     if (showMessage) showStatusMessage('Formulario limpiado para nuevo detalle.', 'info'); // Usar 'info' para limpieza
 }
@@ -299,7 +322,8 @@ function collectCurrentData() {
         id: idInput.value.trim(), // Obtener ID del input y quitar espacios extra
         fecha: fechaValue,
         compras: [], ventas: [], cobranzas: [], articulos: [], aportes: [],
-        // Parsear el gasto del input fijo
+        // Obtener concepto e importe del gasto fijo
+        gastosConcepto: document.getElementById('gastos-concepto')?.value.trim() || '',
         gastos: parseCurrency(document.querySelector('#gastos-list .amount-input')?.value)
     };
 
@@ -416,17 +440,23 @@ function loadDetalle(detalleId) {
 
     // Cargar datos generales
     const idInput = document.getElementById('detalle-id');
-    document.getElementById('fecha').value = detalleToLoad.fecha || new Date().toISOString().split('T')[0]; // Usar fecha guardada o hoy
+    const fechaValue = detalleToLoad.fecha || new Date().toISOString().split('T')[0];
+    document.getElementById('fecha').value = fechaValue; // Usar fecha guardada o hoy
     idInput.value = detalleToLoad.id;
     idInput.readOnly = false; // Permitir editar el ID cargado
     // Guardar el ID cargado en el atributo data para referencia al guardar/actualizar
     idInput.dataset.loadedId = detalleToLoad.id;
 
-    // Cargar el gasto fijo
-    const gastoInput = document.querySelector('#gastos-list .amount-input');
-    if (gastoInput) {
+    // Cargar el gasto fijo (concepto e importe)
+    const gastoConceptoInput = document.getElementById('gastos-concepto');
+    const gastoAmountInput = document.querySelector('#gastos-list .amount-input');
+    if (gastoConceptoInput) {
+         // Cargar concepto guardado o generar default con fecha cargada si no existe
+         gastoConceptoInput.value = detalleToLoad.gastosConcepto || `Gastos hasta el ${new Date(fechaValue + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+    }
+    if (gastoAmountInput) {
         // Formatear el valor de gasto antes de ponerlo en el input de texto
-        gastoInput.value = formatCurrency(detalleToLoad.gastos || 0);
+        gastoAmountInput.value = formatCurrency(detalleToLoad.gastos || 0);
     }
 
     // Mapeo de tipos a IDs de listas
@@ -460,7 +490,7 @@ function loadDetalle(detalleId) {
         }
     }
 
-    updateDateHeaders(); // Asegurar que el concepto de gasto se actualice con la fecha cargada
+    updateDateHeaders(); // Re-aplicar por si acaso, aunque el concepto de gasto ya se cargó/estableció.
     calculateTotals(); // Recalcular todos los totales con los datos cargados
     closeLoadModal(); // Cerrar el modal de carga
     showStatusMessage(`Detalle "${detalleToLoad.id}" cargado. Puedes modificarlo y guardarlo.`, 'success');
