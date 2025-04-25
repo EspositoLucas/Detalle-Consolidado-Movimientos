@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Movimientos Económicos v2</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <!-- Enlace a tu archivo CSS personalizado -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl md:text-3xl font-bold mb-6 text-center text-gray-800">Detalle Consolidado de Movimientos</h1>
+
+        <!-- Sección Gestión de Detalles -->
+        <div class="section-card mb-6">
+            <h2 class="section-title">Gestión de Detalles</h2>
+            <div class="flex flex-wrap gap-3 crud-buttons">
+                <button onclick="createNewDetalle()" class="button button-primary"><i class="fas fa-plus"></i> Nuevo Detalle</button>
+                <button onclick="saveDetalle()" class="button button-success"><i class="fas fa-save"></i> Guardar Detalle Actual</button>
+                <button onclick="openLoadModal()" class="button button-secondary"><i class="fas fa-folder-open"></i> Cargar Detalle</button>
+            </div>
+            <div id="status-message" class="mt-3 text-sm font-medium"></div>
+        </div>
+
+        <!-- Sección Información General -->
+        <div class="section-card">
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                    <label for="fecha" class="input-label">Fecha del Reporte:</label>
+                    <input type="date" id="fecha" name="fecha" class="input-field" onchange="updateDateHeaders()">
+                 </div>
+                 <div>
+                    <label for="detalle-id" class="input-label">Nombre/ID del Detalle:</label>
+                    <input type="text" id="detalle-id" name="detalle-id" class="input-field" placeholder="Ej: Reporte Abril Semana 1">
+                 </div>
+            </div>
+        </div>
+
+        <!-- Secciones de Movimientos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Compras -->
+            <div class="section-card" id="compras-section">
+                <h2 class="section-title">Compras</h2>
+                <div id="compras-list"></div>
+                <button onclick="addRow('compras')" class="button button-success add-button"><i class="fas fa-plus mr-1"></i> Añadir Compra</button>
+                <div class="total-row">Total Compras: <span id="total-compras" class="currency">0.00</span></div>
+            </div>
+            <!-- Ventas -->
+            <div class="section-card" id="ventas-section">
+                <h2 class="section-title">Ventas</h2>
+                <div id="ventas-list"></div>
+                <button onclick="addRow('ventas')" class="button button-success add-button"><i class="fas fa-plus mr-1"></i> Añadir Venta</button>
+                <div class="total-row">Total Ventas: <span id="total-ventas" class="currency">0.00</span></div>
+            </div>
+            <!-- Cobranzas -->
+            <div class="section-card" id="cobranzas-section">
+                <h2 class="section-title">Cobranzas</h2>
+                <div id="cobranzas-list"></div>
+                <button onclick="addRow('cobranzas')" class="button button-success add-button"><i class="fas fa-plus mr-1"></i> Añadir Cobranza</button>
+                <div class="total-row">Total Cobranzas: <span id="total-cobranzas" class="currency">0.00</span></div>
+            </div>
+            <!-- Gastos -->
+            <div class="section-card" id="gastos-section">
+                <h2 class="section-title">Gastos</h2>
+                <div id="gastos-list">
+                    <!-- Fila fija para gastos -->
+                    <div class="input-row flex flex-col md:flex-row gap-4 mb-3 items-start">
+                        <div class="flex-grow">
+                            <label class="input-label">Concepto</label>
+                            <input type="text" value="Gastos hasta el día" class="input-field concept-input bg-gray-100" readonly>
+                        </div>
+                        <div class="w-full md:w-1/3">
+                            <label class="input-label">Importe</label>
+                            <input type="number" placeholder="0.00" step="0.01" class="input-field amount-input text-right" oninput="calculateTotals()">
+                        </div>
+                    </div>
+                </div>
+                <div class="total-row">Total Gastos: <span id="total-gastos" class="currency">0.00</span></div>
+            </div>
+            <!-- Artículos Vendidos -->
+            <div class="section-card" id="articulos-section">
+                <h2 class="section-title">Artículos Vendidos</h2>
+                <div id="articulos-list"></div>
+                <button onclick="addRow('articulos')" class="button button-success add-button"><i class="fas fa-plus mr-1"></i> Añadir Artículo</button>
+                <div class="total-row">Total Cantidad: <span id="total-articulos">0</span></div>
+            </div>
+            <!-- Aportes a Gastos -->
+            <div class="section-card" id="aportes-section">
+                <h2 class="section-title">Aportes a Gastos</h2>
+                <p class="text-sm text-gray-600 mb-3">Registra aquí si diferentes personas contribuyeron a cubrir los gastos totales.</p>
+                <div id="aportes-list"></div>
+                <button onclick="addRow('aportes')" class="button button-success add-button"><i class="fas fa-plus mr-1"></i> Añadir Aporte</button>
+                <div class="total-row">Total Aportes: <span id="total-aportes" class="currency">0.00</span></div>
+            </div>
+        </div>
+
+        <!-- Sección Resultados Consolidados -->
+        <div class="section-card results-card mt-6">
+            <h2 class="section-title text-blue-800">Resultados Consolidados</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-gray-700">
+                <div><strong>Total Ventas:</strong> <span id="res-ventas" class="currency font-semibold">0.00</span></div>
+                <div><strong>Total Compras:</strong> <span id="res-compras" class="currency font-semibold">0.00</span></div>
+                <div><strong>Total Gastos:</strong> <span id="res-gastos" class="currency font-semibold">0.00</span></div>
+                <div><strong>Total Cobranzas:</strong> <span id="res-cobranzas" class="currency font-semibold">0.00</span></div>
+                <div><strong>Total Aportes:</strong> <span id="res-aportes" class="currency font-semibold">0.00</span></div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-blue-300">
+                <h3 class="text-lg font-semibold text-blue-900">Rentabilidad Calculada:</h3>
+                <p class="text-xl md:text-2xl font-bold" id="rentabilidad-total">
+                    <span class="currency">0.00</span>
+                </p>
+                <p class="text-xs text-gray-600 mt-1">(Rentabilidad = Total Ventas - (Total Compras + Total Gastos))</p>
+                 <div id="rentabilidad-distribuida" class="mt-3 text-sm">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Cargar/Eliminar Detalles -->
+    <div id="loadModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeLoadModal()">×</span>
+            <h2 class="text-xl font-semibold mb-4">Cargar o Eliminar Detalle Guardado</h2>
+            <div id="saved-list" class="max-h-60 overflow-y-auto">
+                <!-- Los elementos guardados se cargarán aquí -->
+            </div>
+             <p id="no-saved-message" class="text-gray-500 mt-4" style="display: none;">No hay detalles guardados.</p>
+        </div>
+    </div>
+
+    <!-- Enlace a tu archivo JavaScript -->
+    <script src="script.js"></script>
+
+</body>
+</html>

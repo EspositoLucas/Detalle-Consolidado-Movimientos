@@ -1,0 +1,246 @@
+/* Estilos personalizados */
+body {
+    font-family: 'Inter', sans-serif; /* Asegúrate de tener esta fuente o usa una alternativa */
+    background-color: #f3f4f6;
+}
+
+.section-card {
+    background-color: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: inset 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.5);
+}
+
+.button { /* Estilo base para botones */
+     padding: 0.6rem 1.2rem;
+     border-radius: 0.375rem;
+     cursor: pointer;
+     transition: background-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+     font-weight: 500;
+     text-align: center;
+     display: inline-flex;
+     align-items: center;
+     gap: 0.5rem; /* Espacio entre icono y texto */
+     border: none; /* Añadido para asegurar que no haya borde por defecto */
+}
+
+.button-primary {
+    background-color: #3b82f6; /* Azul */
+    color: white;
+}
+
+.button-primary:hover {
+    background-color: #2563eb;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+ .button-secondary {
+    background-color: #6b7280; /* Gris */
+    color: white;
+}
+
+.button-secondary:hover {
+    background-color: #4b5563;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.button-success {
+    background-color: #10b981; /* Verde */
+    color: white;
+}
+
+.button-success:hover {
+    background-color: #059669;
+     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.button-danger {
+    background-color: #ef4444; /* Rojo */
+    color: white;
+}
+
+.button-danger:hover {
+    background-color: #dc2626;
+     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.add-button { /* Hereda de button y button-success */
+     margin-top: 0.5rem;
+}
+
+.remove-button { /* Hereda de button y button-danger */
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+}
+
+.total-row {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e5e7eb;
+    font-weight: 600;
+    text-align: right;
+    font-size: 1.1rem;
+}
+
+.results-card {
+    background-color: #e0f2fe;
+    border: 1px solid #7dd3fc;
+}
+
+.profit-positive { color: #059669; } /* Verde para rentabilidad positiva */
+.profit-negative { color: #dc2626; } /* Rojo para rentabilidad negativa */
+
+/* Estilo para añadir símbolo de moneda ($) */
+.currency::before {
+    content: '$ ';
+}
+
+/* --- Estilos para el Modal --- */
+.modal {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5); /* Fondo semi-transparente */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 0.5rem;
+    position: relative;
+}
+
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+}
+
+/* Estilos para la lista de elementos guardados */
+.saved-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.saved-item:last-child {
+    border-bottom: none;
+}
+
+.saved-item span {
+    cursor: pointer;
+    flex-grow: 1;
+    margin-right: 10px;
+    word-break: break-word; /* Evita que IDs largos rompan el layout */
+}
+
+ .saved-item span:hover {
+    color: #3b82f6; /* Azul al pasar el ratón */
+ }
+
+/* Estilos responsivos */
+@media (max-width: 768px) { /* Tablets y pantallas más pequeñas */
+    .crud-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+     .button {
+         width: 100%;
+         justify-content: center; /* Centrar icono y texto en botones apilados */
+     }
+     .section-card {
+         padding: 1rem; /* Menos padding en pantallas pequeñas */
+     }
+     .modal-content {
+         width: 90%; /* Modal más ancho en pantallas pequeñas */
+     }
+}
+
+@media (max-width: 640px) { /* Móviles */
+    .input-row {
+        flex-direction: column;
+        align-items: stretch; /* Campos ocupan todo el ancho */
+        gap: 0.5rem; /* Menos espacio entre elementos */
+        padding-bottom: 1rem; /* Más espacio debajo de cada fila */
+        margin-bottom: 1rem;
+    }
+    .input-row > div {
+        margin-bottom: 0.5rem; /* Espacio entre label/input verticalmente */
+        width: 100% !important; /* Forzar ancho completo */
+    }
+    .remove-button-container {
+        text-align: right;
+        margin-top: -0.5rem; /* Ajuste visual para el botón de eliminar */
+        padding-top: 0; /* Resetear padding superior */
+    }
+    .remove-button {
+         padding: 0.5rem 0.8rem; /* Botón un poco más grande para tocar fácil */
+    }
+    h1 {
+        font-size: 1.5rem; /* Título principal más pequeño */
+    }
+    .section-title {
+        font-size: 1.1rem; /* Títulos de sección más pequeños */
+    }
+    .total-row {
+        font-size: 1rem; /* Texto de totales más pequeño */
+    }
+    body {
+        padding: 0.5rem; /* Menos padding general */
+    }
+}
